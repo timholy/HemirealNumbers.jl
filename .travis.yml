@@ -12,6 +12,6 @@ script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd()); Pkg.build("HemirealNumbers"); Pkg.test("HemirealNumbers"; coverage=true)'
 after_success:
-    - if [ $TRAVIS_JULIA_VERSION = "0.4" ] && [ $TRAVIS_OS_NAME = "linux" ]; then
+    - if [ $TRAVIS_JULIA_VERSION = "release" ] && [ $TRAVIS_OS_NAME = "linux" ]; then
          julia -e 'cd(Pkg.dir("HemirealNumbers")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())';
       fi
