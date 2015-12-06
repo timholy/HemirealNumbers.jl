@@ -1,3 +1,5 @@
+__precompile__()
+
 module HemirealNumbers
 
 import Base: +, -, *, /, \, ^, abs, abs2, conj, convert, isfinite, promote_op, promote_rule, real, show, zero
