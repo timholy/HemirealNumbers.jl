@@ -110,16 +110,23 @@ isfinite(x::Hemireal) = isfinite(x.r) && isfinite(x.h)
 abs2(x::Hemireal) = x.r*x.r + abs2(x.h)
 abs(x::Hemireal) = sqrt(abs2(x))
 
-(*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,2)), A, B)
+(*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1)), A, B)
+(*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,2)), A, B)
 A_mul_Bt{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = A_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,1)), A, B)
 A_mul_Bc{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = A_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,1)), A, B)
-At_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,2)), A, B)
-Ac_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,2)), A, B)
+At_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2)), A, B)
+At_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,2)), A, B)
+Ac_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2)), A, B)
+Ac_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,2)), A, B)
 At_mul_Bt{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = At_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,1)), A, B)
 Ac_mul_Bc{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = At_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,1)), A, B)
 
 promote_op{H1,H2}(::Base.MulFun, ::Type{PureHemi{H1}}, ::Type{PureHemi{H2}}) = promote_type(H1,H2)
 promote_op{H1,H2}(::Base.DotMulFun, ::Type{PureHemi{H1}}, ::Type{PureHemi{H2}}) = promote_type(H1,H2)
+promote_op{R<:Real,H}(::Base.MulFun, ::Type{R}, ::Type{PureHemi{H}}) = PureHemi{promote_type(R,H)}
+promote_op{R<:Real,H}(::Base.DotMulFun, ::Type{R}, ::Type{PureHemi{H}}) = PureHemi{promote_type(R,H)}
+promote_op{R<:Real,H}(::Base.MulFun, ::Type{PureHemi{H}}, ::Type{R}) = promote_op(Base.MulFun(), R, PureHemi{H})
+promote_op{R<:Real,H}(::Base.DotMulFun, ::Type{PureHemi{H}}, ::Type{R}) = promote_op(Base.MulFun(), R, PureHemi{H})
 
 promote_rule{H}(::Type{Bool}, ::Type{PureHemi{H}}) = Hemireal{promote_type(Bool,H)}
 promote_rule{R,H}(::Type{Irrational{R}}, ::Type{PureHemi{H}}) = Hemireal{promote_type(Irrational{R},H)}

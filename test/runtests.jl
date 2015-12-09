@@ -1,6 +1,8 @@
 using HemirealNumbers
 using Base.Test
 
+const mult_safe = VERSION >= v"0.5.0-dev"   # julia #14293
+
 p1 = @inferred(PureHemi(1,2))
 p2 = PureHemi(1,2)
 p3 = @inferred(PureHemi(1.0,2))
@@ -84,16 +86,19 @@ x = 3.2+μ-ν
 @test zero(Hemireal{Float16}) === Hemireal{Float16}(0,0,0)
 
 a = [μ+2ν, 5μ-ν]
-# @test @inferred(a*a') == [4 9; 9 -10]   # julia #14293
-# @test isa(a*a', Matrix{Int})
-# @test @inferred(a'*a) == [-6]
+if mult_safe
+    @test @inferred(a*a') == [4 9; 9 -10]
+    @test isa(a*a', Matrix{Int})
+    @test @inferred(a'*a) == [-6]
+    @test isa(a'*a, Vector{Int})
+end
 A = [μ 0; 2μ+3ν 5μ-4ν]
 @test @inferred(A*a) == [2,-18]
 @test isa(A*a, Vector{Hemireal{Int}})
 z = zero(PureHemi{Int})
 A = [μ z; 2μ+3ν 5μ-4ν]
-# @test @inferred(A*a) == [2,18]           # julia #14293
-# @test isa(A*a, Vector{Int})
+@test @inferred(A*a) == [2,-18]
+@test isa(A*a, Vector{Int})
 @test @inferred(A*A)   == [0 0; 10 -40]
 @test isa(A*A,   Matrix{Int})
 @test @inferred(A*A')  == [0 3;  3 -28]
@@ -109,8 +114,15 @@ A = [μ z; 2μ+3ν 5μ-4ν]
 @test @inferred(A.'*A.') == [0 10; 0 -40]
 @test isa(A.'*A.', Matrix{Int})
 
+@test @inferred(A*[1,2]) == [μ,12μ-5ν]
+if mult_safe
+    @test isa(A*[1,2], Vector{PureHemi{Int}})
+end
+
 @test μ*a == [2,-1]
 @test isa(μ*a, Vector{Int})
+@test 3*a == [3μ+6ν, 15μ-3ν]
+@test isa(3*a, Vector{PureHemi{Int}})
 
 # Promotion
 @test isa([μ, false], Vector{Hemireal{Bool}})
