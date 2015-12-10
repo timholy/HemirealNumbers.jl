@@ -5,7 +5,7 @@ module HemirealNumbers
 import Base: +, -, *, /, \, ^, abs, abs2, conj, convert, isfinite, promote_op, promote_rule, real, show, zero
 import Base.LinAlg: A_mul_Bt, A_mul_Bc, At_mul_B, Ac_mul_B, At_mul_Bt, Ac_mul_Bc
 
-export PureHemi, Hemireal, μ, ν
+export PureHemi, Hemireal, μ, ν, mu, nu
 
 immutable PureHemi{T<:Real} <: Number
     m::T
@@ -59,6 +59,8 @@ end
 real{R}(::Type{PureHemi{R}}) = R
 real{R}(x::PureHemi{R}) = zero(R)
 conj(x::PureHemi) = x
+mu(x::PureHemi) = x.m
+nu(x::PureHemi) = x.n
 
 zero{R}(::Type{PureHemi{R}}) = PureHemi{R}(0, 0)
 zero{R}(::PureHemi{R}) = zero(PureHemi{R})
@@ -101,6 +103,8 @@ convert{R}(::Type{Hemireal{R}}, r::Real, m::Real, n::Real) = Hemireal{R}(r, Pure
 real{R}(::Type{Hemireal{R}}) = R
 real{R}(x::Hemireal{R}) = x.r
 conj(x::Hemireal) = x
+mu(x::Hemireal) = mu(x.h)
+nu(x::Hemireal) = nu(x.h)
 
 zero{R}(::Type{Hemireal{R}}) = Hemireal{R}(0, PureHemi{R}(0, 0))
 zero{R}(::Hemireal{R}) = zero(Hemireal{R})
@@ -109,6 +113,18 @@ isfinite(x::Hemireal) = isfinite(x.r) && isfinite(x.h)
 # ?
 abs2(x::Hemireal) = x.r*x.r + abs2(x.h)
 abs(x::Hemireal) = sqrt(abs2(x))
+
+for f in (:mu, :nu)
+    @eval begin
+        function $f(X::AbstractArray)
+            out = Array(real(eltype(X)), size(X))
+            for I in eachindex(X)
+                out[I] = $f(X[I])
+            end
+            out
+        end
+    end
+end
 
 (*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1)), A, B)
 (*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,2)), A, B)

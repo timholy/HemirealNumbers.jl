@@ -38,6 +38,8 @@ p3 = @inferred(PureHemi(1.0,2))
 @test PureHemi(3,4)^2.0 == 24.0
 @test real(PureHemi(0.2,0.3)) == 0.0
 @test real(PureHemi{Bool}) == Bool
+@test mu(PureHemi(0.2,0.3)) == 0.2
+@test nu(PureHemi(0.2,0.3)) == 0.3
 @test zero(PureHemi(0.2,0.3)) == PureHemi(0,0)
 @test zero(PureHemi{Bool}) == PureHemi(false,false)
 @test conj(3μ+4ν) == 3μ+4ν
@@ -81,11 +83,17 @@ p3 = @inferred(PureHemi(1.0,2))
 x = 3.2+μ-ν
 @test real(x) === 3.2
 @test real(Hemireal{Float16}) == Float16
+@test mu(x) == 1
+@test nu(x) == -1
+@test mu([x]) == [1]
+@test nu([x]) == [-1]
 @test conj(x) === x
 @test zero(x) === Hemireal(0.0,0.0,0.0)
 @test zero(Hemireal{Float16}) === Hemireal{Float16}(0,0,0)
 
 a = [μ+2ν, 5μ-ν]
+@test mu(a) == [1,5]
+@test nu(a) == [2,-1]
 if mult_safe
     @test @inferred(a*a') == [4 9; 9 -10]
     @test isa(a*a', Matrix{Int})
