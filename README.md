@@ -1,7 +1,7 @@
 # HemirealNumbers
 
-[![Build Status](https://travis-ci.org/timholy/HemirealNumbers.jl.svg?branch=master)](https://travis-ci.org/timholy/HemirealNumbers.jl)
-[![codecov.io](https://codecov.io/github/timholy/HemirealNumbers.jl/coverage.svg?branch=master)](https://codecov.io/github/timholy/HemirealNumbers.jl?branch=master)
+[![CI](https://github.com/timholy/HemirealNumbers.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/timholy/HemirealNumbers.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/timholy/HemirealNumbers.jl/graph/badge.svg?token=AcT0zNxN71)](https://codecov.io/gh/timholy/HemirealNumbers.jl)
 
 A hemireal number `z` can be written
 ```jl
