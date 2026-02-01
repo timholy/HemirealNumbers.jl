@@ -36,7 +36,10 @@ convert(::Type{PureHemi{R}}, x::Real) where R = iszero(x) ? zero(PureHemi{R}) : 
 convert(::Type{R}, x::Hemireal) where R<:Real = iszero(x.h) ? R(x.r) : throw(DomainError(x, "Hemireal numbers with non-zero hemi-part cannot be converted to real numbers"))
 convert(::Type{R}, x::PureHemi) where R<:Real = iszero(x) ? zero(R) : throw(DomainError(x, "Hemireal numbers with non-zero hemi-part cannot be converted to real numbers"))
 
-iszero(x::PureHemi) = iszero(x.m) && iszero(x.n)
+iszero(x::PureHemi) = iszero(x.m) & iszero(x.n)
+
+Base.:(==)(x::PureHemi, y::PureHemi) = (x.m == y.m) & (x.n == y.n)
+Base.isequal(x::PureHemi, y::PureHemi) = isequal(x.m, y.m) & isequal(x.n, y.n)
 
 (-)(x::PureHemi) = PureHemi(-x.m, -x.n)
 

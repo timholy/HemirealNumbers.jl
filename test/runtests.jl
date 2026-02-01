@@ -17,6 +17,9 @@ using Test
     @test @inferred(PureHemi(1,2) + PureHemi(5,3)) === PureHemi(6,5)
     @test @inferred((μ+2ν) + (5μ+3ν)) === 6μ+5ν
     @test PureHemi(1,2) - PureHemi(5,3) == PureHemi(-4,-1)
+    @test PureHemi(0.0, 0.0) == PureHemi(-0.0, -0.0)
+    @test PureHemi(NaN, 1.0) != PureHemi(NaN, 1.0)
+    @test isequal(PureHemi(NaN, 1.0), PureHemi(NaN, 1.0))
     @test μ*μ == 0
     @test ν*ν == 0
     @test ν*μ == 1
