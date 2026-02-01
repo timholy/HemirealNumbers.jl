@@ -1,37 +1,37 @@
-__precompile__()
-
 module HemirealNumbers
 
 import Base: +, -, *, /, \, ^, abs, abs2, conj, convert, isfinite, promote_op, promote_rule, real, show, zero
-import Base.LinAlg: A_mul_Bt, A_mul_Bc, At_mul_B, Ac_mul_B, At_mul_Bt, Ac_mul_Bc
 
 export PureHemi, Hemireal, μ, ν, mu, nu
 
-immutable PureHemi{T<:Real} <: Number
+struct PureHemi{T<:Real} <: Number
     m::T
     n::T
 end
 PureHemi(m::Real, n::Real) = PureHemi(promote(m,n)...)
 
-immutable Hemireal{T<:Real} <: Number
+struct Hemireal{T<:Real} <: Number
     r::T
     h::PureHemi{T}
 end
 
-Hemireal(r::Real, m::Real, n::Real) = Hemireal(r, PureHemi(m, n))
-function Hemireal{R,H}(r::R, h::PureHemi{H})
+Hemireal{T}(r::Real, m::Real, n::Real) where {T<:Real} = Hemireal{T}(r, PureHemi{T}(m, n))
+Hemireal(r::T, m::T, n::T) where {T<:Real} = Hemireal{T}(r, PureHemi{T}(m, n))
+Hemireal(r::Real, m::Real, n::Real) = Hemireal(promote(r, m, n)...)
+
+function Hemireal(r::R, h::PureHemi{H}) where {R<:Real,H<:Real}
     T = promote_type(R,H)
     Hemireal{T}(r, PureHemi{T}(h.m, h.n))
 end
-Hemireal{R}(h::PureHemi{R}) = Hemireal(zero(R), h)
-Hemireal{R}(r::R) = Hemireal(r, zero(PureHemi{R}))
+Hemireal(h::PureHemi{R}) where {R<:Real} = Hemireal(zero(R), h)
+Hemireal(r::R) where {R<:Real} = Hemireal(r, zero(PureHemi{R}))
 
 const μ = PureHemi(true,false)
 const ν = PureHemi(false,true)
 
 ## PureHemi implementation
-convert{R}(::Type{PureHemi{R}}, x::PureHemi) = PureHemi{R}(x.m, x.n)
-convert{R}(::Type{PureHemi{R}}, x::Real) = x == 0 ? zero(PureHemi{R}) : throw(DomainError())  # error("Non-zero reals cannot be converted to pure-hemi numbers")
+convert(::Type{PureHemi{R}}, x::PureHemi) where R = PureHemi{R}(x.m, x.n)
+convert(::Type{PureHemi{R}}, x::Real) where R = iszero(x) ? zero(PureHemi{R}) : throw(DomainError(x, "Non-zero reals cannot be converted to pure-hemi numbers"))
 
 (-)(x::PureHemi) = PureHemi(-x.m, -x.n)
 
@@ -56,14 +56,14 @@ end
 (/)(c::Real, x::PureHemi) = PureHemi(c/(2*x.n), c/(2*x.m))
 (\)(x::PureHemi, c::Real) = c/x
 
-real{R}(::Type{PureHemi{R}}) = R
-real{R}(x::PureHemi{R}) = zero(R)
+real(::Type{PureHemi{R}}) where {R<:Real} = R
+real(x::PureHemi{R}) where {R<:Real} = zero(R)
 conj(x::PureHemi) = x
 mu(x::PureHemi) = x.m
 nu(x::PureHemi) = x.n
 
-zero{R}(::Type{PureHemi{R}}) = PureHemi{R}(0, 0)
-zero{R}(::PureHemi{R}) = zero(PureHemi{R})
+zero(::Type{PureHemi{R}}) where {R<:Real} = PureHemi{R}(0, 0)
+zero(::PureHemi{R}) where {R<:Real} = zero(PureHemi{R})
 
 isfinite(x::PureHemi) = isfinite(x.m) && isfinite(x.n)
 # I'm not entirely certain whether the next two should even be defined.
@@ -72,10 +72,10 @@ abs2(x::PureHemi) = x.m*x.m + x.n*x.n
 abs(x::PureHemi) = sqrt(abs2(x))
 
 ## Hemireal implementation
-convert{R}(::Type{Hemireal{R}}, x::Hemireal) = Hemireal{R}(x.r, x.h)
-convert{R}(::Type{Hemireal{R}}, x::PureHemi) = Hemireal{R}(0, x)
-convert{R}(::Type{Hemireal{R}}, x::Real) = Hemireal{R}(x, zero(PureHemi{R}))
-convert{R}(::Type{Hemireal{R}}, r::Real, m::Real, n::Real) = Hemireal{R}(r, PureHemi{R}(m, n))
+convert(::Type{Hemireal{R}}, x::Hemireal) where {R<:Real} = Hemireal{R}(x.r, x.h)
+convert(::Type{Hemireal{R}}, x::PureHemi) where {R<:Real} = Hemireal{R}(0, x)
+convert(::Type{Hemireal{R}}, x::Real) where {R<:Real} = Hemireal{R}(x, zero(PureHemi{R}))
+convert(::Type{Hemireal{R}}, r::Real, m::Real, n::Real) where {R<:Real} = Hemireal{R}(r, PureHemi{R}(m, n))
 
 (-)(x::Hemireal) = Hemireal(-x.r, -x.h)
 
@@ -100,14 +100,14 @@ convert{R}(::Type{Hemireal{R}}, r::Real, m::Real, n::Real) = Hemireal{R}(r, Pure
 (/)(x::Hemireal, c::Real) = Hemireal(x.r/c, x.h/c)
 (\)(c::Real, x::Hemireal) = x/c
 
-real{R}(::Type{Hemireal{R}}) = R
-real{R}(x::Hemireal{R}) = x.r
+real(::Type{Hemireal{R}}) where {R<:Real} = R
+real(x::Hemireal{R}) where {R<:Real} = x.r
 conj(x::Hemireal) = x
 mu(x::Hemireal) = mu(x.h)
 nu(x::Hemireal) = nu(x.h)
 
-zero{R}(::Type{Hemireal{R}}) = Hemireal{R}(0, PureHemi{R}(0, 0))
-zero{R}(::Hemireal{R}) = zero(Hemireal{R})
+zero(::Type{Hemireal{R}}) where {R<:Real} = Hemireal{R}(0, PureHemi{R}(0, 0))
+zero(::Hemireal{R}) where {R<:Real} = zero(Hemireal{R})
 
 isfinite(x::Hemireal) = isfinite(x.r) && isfinite(x.h)
 # ?
@@ -117,7 +117,7 @@ abs(x::Hemireal) = sqrt(abs2(x))
 for f in (:mu, :nu)
     @eval begin
         function $f(X::AbstractArray)
-            out = Array(real(eltype(X)), size(X))
+            out = Array{real(eltype(X))}(undef, size(X))
             for I in eachindex(X)
                 out[I] = $f(X[I])
             end
@@ -126,33 +126,33 @@ for f in (:mu, :nu)
     end
 end
 
-(*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1)), A, B)
-(*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,2)), A, B)
-A_mul_Bt{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = A_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,1)), A, B)
-A_mul_Bc{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = A_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,1)), A, B)
-At_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2)), A, B)
-At_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,2)), A, B)
-Ac_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2)), A, B)
-Ac_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,2)), A, B)
-At_mul_Bt{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = At_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,1)), A, B)
-Ac_mul_Bc{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = At_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,1)), A, B)
+# (*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1)), A, B)
+# (*){H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = A_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,2)), A, B)
+# A_mul_Bt{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = A_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,1)), A, B)
+# A_mul_Bc{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = A_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,1), size(B,1)), A, B)
+# At_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2)), A, B)
+# At_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,2)), A, B)
+# Ac_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVector{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2)), A, B)
+# Ac_mul_B{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedMatrix{H2}) = At_mul_B!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,2)), A, B)
+# At_mul_Bt{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = At_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,1)), A, B)
+# Ac_mul_Bc{H1<:PureHemi,H2<:PureHemi}(A::StridedVecOrMat{H1}, B::StridedVecOrMat{H2}) = At_mul_Bt!(Array(promote_type(real(H1),real(H2)), size(A,2), size(B,1)), A, B)
 
-promote_op{H1,H2}(::Base.MulFun, ::Type{PureHemi{H1}}, ::Type{PureHemi{H2}}) = promote_type(H1,H2)
-promote_op{H1,H2}(::Base.DotMulFun, ::Type{PureHemi{H1}}, ::Type{PureHemi{H2}}) = promote_type(H1,H2)
-promote_op{R<:Real,H}(::Base.MulFun, ::Type{R}, ::Type{PureHemi{H}}) = PureHemi{promote_type(R,H)}
-promote_op{R<:Real,H}(::Base.DotMulFun, ::Type{R}, ::Type{PureHemi{H}}) = PureHemi{promote_type(R,H)}
-promote_op{R<:Real,H}(::Base.MulFun, ::Type{PureHemi{H}}, ::Type{R}) = promote_op(Base.MulFun(), R, PureHemi{H})
-promote_op{R<:Real,H}(::Base.DotMulFun, ::Type{PureHemi{H}}, ::Type{R}) = promote_op(Base.MulFun(), R, PureHemi{H})
+# promote_op(::Base.MulFun, ::Type{PureHemi{H1}}, ::Type{PureHemi{H2}})  where {H1<:Real,H2<:Real} = promote_type(H1,H2)
+# promote_op(::Base.DotMulFun, ::Type{PureHemi{H1}}, ::Type{PureHemi{H2}}) where {H1<:Real,H2<:Real}  = promote_type(H1,H2)
+# promote_op(::Base.MulFun, ::Type{R}, ::Type{PureHemi{H}}) where {R<:Real,H} = PureHemi{promote_type(R,H)}
+# promote_op(::Base.DotMulFun, ::Type{R}, ::Type{PureHemi{H}}) where {R<:Real,H} = PureHemi{promote_type(R,H)}
+# promote_op(::Base.MulFun, ::Type{PureHemi{H}}, ::Type{R}) where {R<:Real,H} = promote_op(Base.MulFun(), R, PureHemi{H})
+# promote_op(::Base.DotMulFun, ::Type{PureHemi{H}}, ::Type{R}) where {R<:Real,H} = promote_op(Base.MulFun(), R, PureHemi{H})
 
-promote_rule{H}(::Type{Bool}, ::Type{PureHemi{H}}) = Hemireal{promote_type(Bool,H)}
-promote_rule{R,H}(::Type{Irrational{R}}, ::Type{PureHemi{H}}) = Hemireal{promote_type(Irrational{R},H)}
-promote_rule{R<:Real,H}(::Type{R}, ::Type{PureHemi{H}}) = Hemireal{promote_type(R,H)}
-promote_rule{H1,H2}(::Type{PureHemi{H1}}, ::Type{PureHemi{H2}}) = PureHemi{promote_type(H1,H2)}
-promote_rule{H}(::Type{Bool}, ::Type{Hemireal{H}}) = Hemireal{promote_type(Bool,H)}
-promote_rule{R,H}(::Type{Irrational{R}}, ::Type{Hemireal{H}}) = Hemireal{promote_type(Irrational{R},H)}
-promote_rule{R<:Real,H}(::Type{R}, ::Type{Hemireal{H}}) = Hemireal{promote_type(R,H)}
-promote_rule{H1,H2}(::Type{PureHemi{H1}}, ::Type{Hemireal{H2}}) = Hemireal{promote_type(H1,H2)}
-promote_rule{H1,H2}(::Type{Hemireal{H1}}, ::Type{Hemireal{H2}}) = Hemireal{promote_type(H1,H2)}
+promote_rule(::Type{Bool}, ::Type{PureHemi{H}}) where {H<:Real} = Hemireal{promote_type(Bool,H)}
+promote_rule(::Type{R}, ::Type{PureHemi{H}}) where {R<:AbstractIrrational,H<:Real} = Hemireal{promote_type(R,H)}
+promote_rule(::Type{R}, ::Type{PureHemi{H}}) where {R<:Real,H<:Real} = Hemireal{promote_type(R,H)}
+promote_rule(::Type{PureHemi{H1}}, ::Type{PureHemi{H2}}) where {H1<:Real,H2<:Real} = PureHemi{promote_type(H1,H2)}
+promote_rule(::Type{Bool}, ::Type{Hemireal{H}}) where {H<:Real} = Hemireal{promote_type(Bool,H)}
+promote_rule(::Type{R}, ::Type{Hemireal{H}}) where {R<:AbstractIrrational,H<:Real} = Hemireal{promote_type(R,H)}
+promote_rule(::Type{R}, ::Type{Hemireal{H}}) where {R<:Real,H<:Real} = Hemireal{promote_type(R,H)}
+promote_rule(::Type{PureHemi{H1}}, ::Type{Hemireal{H2}}) where {H1<:Real,H2<:Real} = Hemireal{promote_type(H1,H2)}
+promote_rule(::Type{Hemireal{H1}}, ::Type{Hemireal{H2}}) where {H1<:Real,H2<:Real} = Hemireal{promote_type(H1,H2)}
 
 show(io::IO, x::PureHemi) = x.n >= 0 ? print(io, x.m, "μ + ", x.n, 'ν') : print(io, x.m, "μ - ", abs(x.n), 'ν')
 show(io::IO, x::Hemireal) = x.h.m >= 0 ? print(io, x.r, " + ", x.h) : print(io, x.r, " - ", PureHemi(-x.h.m, x.h.n))
