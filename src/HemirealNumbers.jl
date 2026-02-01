@@ -1,6 +1,6 @@
 module HemirealNumbers
 
-import Base: +, -, *, /, \, ^, abs, abs2, conj, convert, isfinite, promote_op, promote_rule, real, show, zero
+import Base: +, -, *, /, \, ^, abs, abs2, conj, convert, isfinite, iszero, promote_op, promote_rule, real, show, zero
 
 export PureHemi, Hemireal, μ, ν, mu, nu
 
@@ -32,6 +32,11 @@ const ν = PureHemi(false,true)
 ## PureHemi implementation
 convert(::Type{PureHemi{R}}, x::PureHemi) where R = PureHemi{R}(x.m, x.n)
 convert(::Type{PureHemi{R}}, x::Real) where R = iszero(x) ? zero(PureHemi{R}) : throw(DomainError(x, "Non-zero reals cannot be converted to pure-hemi numbers"))
+
+convert(::Type{R}, x::Hemireal) where R<:Real = iszero(x.h) ? R(x.r) : throw(DomainError(x, "Hemireal numbers with non-zero hemi-part cannot be converted to real numbers"))
+convert(::Type{R}, x::PureHemi) where R<:Real = iszero(x) ? zero(R) : throw(DomainError(x, "Hemireal numbers with non-zero hemi-part cannot be converted to real numbers"))
+
+iszero(x::PureHemi) = iszero(x.m) && iszero(x.n)
 
 (-)(x::PureHemi) = PureHemi(-x.m, -x.n)
 
