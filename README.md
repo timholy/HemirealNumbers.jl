@@ -16,6 +16,6 @@ defined "the obvious way," and the conjugate of `z` is just `z`.
 Multiplication of general hemireals is commutative but not
 associative.  Hemireals with `ν=0` are the same as dual numbers.
 
-The motivation for inventing/rediscovering (?) the hemireals was to
+The motivation for inventing/rediscovering the hemireals was to
 solve, using finite numbers, what would otherwise be singular
 equations.
