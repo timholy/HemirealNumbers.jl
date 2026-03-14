@@ -110,7 +110,8 @@ end
 convert(::Type{Hemireal{R}}, x::Hemireal) where {R <: Real} = Hemireal{R}(x.r, x.h)
 convert(::Type{Hemireal{R}}, x::PureHemi) where {R <: Real} = Hemireal{R}(0, x)
 convert(::Type{Hemireal{R}}, x::Real) where {R <: Real} = Hemireal{R}(x, zero(PureHemi{R}))
-convert(::Type{Hemireal{R}}, r::Real, m::Real, n::Real) where {R <: Real} = Hemireal{R}(r, PureHemi{R}(m, n))
+convert(::Type{PureHemi{R}}, x::Hemireal) where {R <: Real} =
+    iszero(x.r) ? convert(PureHemi{R}, x.h) : throw(DomainError(x, "Hemireal numbers with non-zero real part cannot be converted to pure-hemi numbers"))
 
 iszero(x::Hemireal) = iszero(x.r) & iszero(x.h)
 isnan(x::Hemireal) = isnan(x.r) | isnan(x.h)

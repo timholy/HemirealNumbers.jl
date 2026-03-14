@@ -15,6 +15,8 @@ using Test
     @test @inferred(convert(PureHemi{Float64}, p1)) === PureHemi(1.0, 2.0)
     @test @inferred(convert(PureHemi{Float64}, 0)) == PureHemi(0.0, 0.0)
     @test_throws DomainError convert(PureHemi{Float64}, 1)
+    @test convert(Float64, PureHemi(0, 0)) === 0.0
+    @test_throws DomainError convert(Float64, PureHemi(1, 0))
 
     @test @inferred(-p1) == PureHemi(-1, -2)
     @test @inferred(+p1) == p1
@@ -95,6 +97,10 @@ using Test
     @test convert(Hemireal{Float64}, 1) === Hemireal(1.0, 0.0, 0.0)
     @test convert(Hemireal{Float64}, 2μ + 3ν) === Hemireal(0.0, 2.0, 3.0)
     @test convert(Hemireal{Float64}, Hemireal(1, 2, 3)) === Hemireal(1.0, 2.0, 3.0)
+    @test convert(Float64, Hemireal(1, 0, 0)) === 1.0
+    @test_throws DomainError convert(Float64, Hemireal(1, 2, 3))
+    @test convert(PureHemi{Float64}, Hemireal(0, 2, 3)) === PureHemi(2.0, 3.0)
+    @test_throws DomainError convert(PureHemi{Float64}, Hemireal(1, 2, 3))
 
     @test @inferred(-(7 + 2μ)) === Hemireal(-7, -2, 0)
     @test @inferred(+(7 + 2μ)) === Hemireal(7, 2, 0)
