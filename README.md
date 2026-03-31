@@ -9,10 +9,10 @@ z = r + mμ + nν
 ```
 where `r`, `m`, and `n` are real, and the special numbers `μ`, `ν` satisfy
 ```jl
-μ*μ = ν*ν = 0, μ*ν = ν*μ = 1.
+μ*μ = ν*ν = 0, μ*ν = ν*μ = -1.
 ```
 Addition, subtraction, and any operation involving real numbers are
-defined "the obvious way," and the conjugate of `z` is just `z`.
+defined "the obvious way," and the conjugate of `z = r + mμ + nν` is `r - mμ - nν`.
 Multiplication of general hemireals is commutative but not
 associative.  Hemireals with `ν=0` are the same as dual numbers.
 
