@@ -56,7 +56,7 @@ Base.isequal(x::PureHemi, y::PureHemi) = isequal(x.m, y.m) & isequal(x.n, y.n)
 
 (+)(x::PureHemi, y::PureHemi) = PureHemi(x.m + y.m, x.n + y.n)
 (-)(x::PureHemi, y::PureHemi) = PureHemi(x.m - y.m, x.n - y.n)
-(*)(x::PureHemi, y::PureHemi) = x.m * y.n + x.n * y.m
+(*)(x::PureHemi, y::PureHemi) = -(x.m * y.n + x.n * y.m)
 (*)(c::Bool, x::PureHemi) = PureHemi(c * x.m, c * x.n)
 (*)(c::Real, x::PureHemi) = PureHemi(c * x.m, c * x.n)
 (*)(x::PureHemi, c::Real) = c * x
@@ -72,12 +72,12 @@ end
 (^)(x::PureHemi, p::Real) = (x * x)^(p / 2)
 
 # Symmetric division (there are other solutions y to y*x = c)
-(/)(c::Real, x::PureHemi) = PureHemi(c / (2 * x.n), c / (2 * x.m))
+(/)(c::Real, x::PureHemi) = PureHemi(-c / (2 * x.n), -c / (2 * x.m))
 (\)(x::PureHemi, c::Real) = c / x
 
 real(::Type{PureHemi{R}}) where {R <: Real} = R
 real(x::PureHemi{R}) where {R <: Real} = zero(R)
-conj(x::PureHemi) = x
+conj(x::PureHemi) = -x
 mu(x::PureHemi) = x.m
 nu(x::PureHemi) = x.n
 
@@ -85,7 +85,7 @@ zero(::Type{PureHemi{R}}) where {R <: Real} = PureHemi{R}(0, 0)
 zero(::PureHemi{R}) where {R <: Real} = zero(PureHemi{R})
 
 # (note that abs2(x) != x*x for PureHemi)
-abs2(x::PureHemi) = x.m * x.m + x.n * x.n
+abs2(x::PureHemi) = x * conj(x)
 abs(x::PureHemi) = sqrt(abs2(x))
 
 float(::Type{PureHemi{T}}) where {T <: AbstractFloat} = PureHemi{T}
@@ -150,7 +150,7 @@ Base.isequal(x::Hemireal, y::Hemireal) = isequal(x.r, y.r) & isequal(x.h, y.h)
 
 real(::Type{Hemireal{R}}) where {R <: Real} = R
 real(x::Hemireal{R}) where {R <: Real} = x.r
-conj(x::Hemireal) = x
+conj(x::Hemireal) = Hemireal(x.r, -x.h)
 mu(x::Hemireal) = mu(x.h)
 nu(x::Hemireal) = nu(x.h)
 

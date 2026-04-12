@@ -29,29 +29,31 @@ using Test
     @test isequal(PureHemi(NaN, 1.0), PureHemi(NaN, 1.0))
     @test μ * μ == 0
     @test ν * ν == 0
-    @test ν * μ == 1
-    @test μ * ν == 1
+    @test ν * μ == -1
+    @test μ * ν == -1
     @test 2 * PureHemi(3, 4) == PureHemi(6, 8)
     @test PureHemi(3, 4) * (-1) == PureHemi(-3, -4)
     @test false * PureHemi(3, 4) == 0
     @test PureHemi(3, 4) * true == 3μ + 4ν
     @test @inferred((3μ + 4ν) / 2) === 1.5μ + 2ν
     @test 2 \ (3μ + 4ν) === 1.5μ + 2ν
-    @test 18 / PureHemi(3, 3) == PureHemi(3, 3)
-    @test PureHemi(3, 3) \ 7 === PureHemi(7 / 6, 7 / 6)
+    @test 18 / PureHemi(3, 3) == PureHemi(-3, -3)
+    @test (18 / PureHemi(4, 2)) * PureHemi(4, 2) == 18
+    @test PureHemi(3, 3) \ 7 === PureHemi(-7 / 6, -7 / 6)
+    @test (PureHemi(4, 2) \ 18) * PureHemi(4, 2) == 18
     @test @inferred((4μ + 2ν) / (2μ + ν)) === 2.0
     @test_throws ArgumentError (4μ + 2ν) / (2μ + 3ν)
     @test @inferred((4μ + 2ν) \ (2μ + ν)) === 0.5
-    @test PureHemi(3, 4)^2 == 24
-    @test PureHemi(3, 4)^(1 // 4) == 24^(1 // 8)
-    @test PureHemi(3, 4)^2.0 == 24.0
+    @test PureHemi(3, 4)^2 == -24
+    @test PureHemi(3, -4)^(1 // 4) == 24^(1 // 8)
+    @test PureHemi(3, 4)^2.0 == -24.0
     @test real(PureHemi(0.2, 0.3)) == 0.0
     @test real(PureHemi{Bool}) == Bool
     @test mu(PureHemi(0.2, 0.3)) == 0.2
     @test nu(PureHemi(0.2, 0.3)) == 0.3
     @test zero(PureHemi(0.2, 0.3)) == PureHemi(0, 0)
     @test zero(PureHemi{Bool}) == PureHemi(false, false)
-    @test conj(3μ + 4ν) == 3μ + 4ν
+    @test conj(3μ + 4ν) == -(3μ + 4ν)
     @test isfinite(3μ + 4ν)
     @test !isfinite(Inf * μ + 3.2 * ν)
     @test PureHemi(1, 2) ≈ PureHemi(nextfloat(1.0), nextfloat(2.0))
@@ -106,14 +108,14 @@ using Test
     @test @inferred(+(7 + 2μ)) === Hemireal(7, 2, 0)
     @test @inferred((1 + 2μ + 3ν) + (5.5 + 2.1μ + 3.2ν)) === Hemireal(6.5, 4.1, 6.2)
     @test (1 + 2μ + 3ν) - (5.5 + 2.1μ + 3.2ν) ≈ Hemireal(-4.5, -0.1, -0.2)
-    @test (1 + 2μ + 3ν) * (5.5 + 2.1μ + 3.2ν) ≈ Hemireal(5.5 + 6.4 + 6.3, 13.1, 19.7)
+    @test (1 + 2μ + 3ν) * (5.5 + 2.1μ + 3.2ν) ≈ Hemireal(5.5 - 6.4 - 6.3, 13.1, 19.7)
 
     @test @inferred((1 + 2μ + 3ν) + PureHemi(2.1, 3.2)) === Hemireal(1, 4.1, 6.2)
     @test @inferred(PureHemi(7, 9) + (2 + μ - 6ν)) === Hemireal(2, 8, 3)
     @test (1 + 2μ + 3ν) - PureHemi(2.1, 3.2) ≈ Hemireal(1.0, -0.1, -0.2)
     @test @inferred(PureHemi(7, 9) - (2 + μ - 6ν)) === Hemireal(-2, 6, 15)
-    @test (1 + 2μ + 3ν) * PureHemi(2.1, 3.2) ≈ Hemireal(6.4 + 6.3, 2.1, 3.2)
-    @test @inferred(PureHemi(7, 9) * (2 + μ - 6ν)) === Hemireal(-33, 14, 18)
+    @test (1 + 2μ + 3ν) * PureHemi(2.1, 3.2) ≈ Hemireal(-(6.4 + 6.3), 2.1, 3.2)
+    @test @inferred(PureHemi(7, 9) * (2 + μ - 6ν)) === Hemireal(33, 14, 18)
 
     @test @inferred((1 + 2μ + 3ν) + 5.5) === Hemireal(6.5, 2.0, 3.0)
     @test @inferred(3 + (2 + μ - 6ν)) === Hemireal(5, 1, -6)
@@ -133,7 +135,7 @@ using Test
     @test nu(x) == -1
     @test mu([x]) == [1]
     @test nu([x]) == [-1]
-    @test conj(x) === x
+    @test conj(x) === 3.2 - μ + ν
     @test zero(x) === Hemireal(0.0, 0.0, 0.0)
     @test zero(Hemireal{Float16}) === Hemireal{Float16}(0, 0, 0)
 
@@ -217,31 +219,31 @@ using Test
     @test isa(a * a', Matrix{Int})
     @test @inferred(a' * a) === -6
     A = [μ 0; 2μ + 3ν 5μ - 4ν]
-    @test @inferred(A * a) == [2, -18]
+    @test @inferred(A * a) == [-2, 18]
     @test isa(A * a, Vector{Hemireal{Int}})
     z = zero(PureHemi{Int})
     A = [μ z; 2μ + 3ν 5μ - 4ν]
-    @test @inferred(A * a) == [2, -18]
+    @test @inferred(A * a) == [-2, 18]
     @test isa(A * a, Vector{Int})
-    @test @inferred(A * A) == [0 0; 10 -40]
+    @test @inferred(A * A) == [0 0; -10 40]
     @test isa(A * A, Matrix{Int})
-    @test @inferred(A * A') == [0 3;  3 -28]
+    @test @inferred(A * A') == [0 3; 3 -28]
     @test isa(A * A', Matrix{Int})
-    @test @inferred(A * transpose(A)) == [0 3;  3 -28]
+    @test @inferred(A * transpose(A)) == [0 -3; -3 28]
     @test isa(A * transpose(A), Matrix{Int})
     @test @inferred(A' * A) == [12 7; 7 -40]
     @test isa(A' * A, Matrix{Int})
-    @test @inferred(transpose(A) * A) == [12 7; 7 -40]
+    @test @inferred(transpose(A) * A) == [-12 -7; -7 40]
     @test isa(transpose(A) * A, Matrix{Int})
-    @test @inferred(A' * A') == [0 10; 0 -40]
+    @test @inferred(A' * A') == [0 -10; 0 40]
     @test isa(A' * A', Matrix{Int})
-    @test @inferred(transpose(A) * transpose(A)) == [0 10; 0 -40]
+    @test @inferred(transpose(A) * transpose(A)) == [0 -10; 0 40]
     @test isa(transpose(A) * transpose(A), Matrix{Int})
 
     @test @inferred(A * [1, 2]) == [μ, 12μ - 5ν]
     @test isa(A * [1, 2], Vector{PureHemi{Int}})
 
-    @test μ * a == [2, -1]
+    @test μ * a == [-2, 1]
     @test isa(μ * a, Vector{Int})
     @test 3 * a == [3μ + 6ν, 15μ - 3ν]
     @test isa(3 * a, Vector{PureHemi{Int}})
