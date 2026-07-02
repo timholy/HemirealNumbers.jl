@@ -1,4 +1,4 @@
-The HemirealNumbers.jl package is licensed under the MIT "Expat" License:
+The HemiplexNumbers.jl package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2015: Tim Holy.
 >

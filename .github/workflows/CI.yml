@@ -72,6 +72,6 @@ jobs:
   #       shell: julia --project=docs --color=yes {0}
   #       run: |
   #         using Documenter: DocMeta, doctest
-  #         using HemirealNumbers
-  #         DocMeta.setdocmeta!(HemirealNumbers, :DocTestSetup, :(using HemirealNumbers); recursive=true)
-  #         doctest(HemirealNumbers)
+  #         using HemiplexNumbers
+  #         DocMeta.setdocmeta!(HemiplexNumbers, :DocTestSetup, :(using HemiplexNumbers); recursive=true)
+  #         doctest(HemiplexNumbers)

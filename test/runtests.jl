@@ -1,9 +1,9 @@
-using HemirealNumbers
+using HemiplexNumbers
 using Test
 
-@testset "HemirealNumbers" begin
+@testset "HemiplexNumbers" begin
     @testset "ambiguities" begin
-        @test isempty(detect_ambiguities(HemirealNumbers))
+        @test isempty(detect_ambiguities(HemiplexNumbers))
     end
 
     p1 = @inferred(PureHemi(1, 2))
@@ -29,24 +29,24 @@ using Test
     @test isequal(PureHemi(NaN, 1.0), PureHemi(NaN, 1.0))
     @test μ * μ == 0
     @test ν * ν == 0
-    @test ν * μ == -1
-    @test μ * ν == -1
+    @test ν * μ == -0.5
+    @test μ * ν == -0.5
     @test 2 * PureHemi(3, 4) == PureHemi(6, 8)
     @test PureHemi(3, 4) * (-1) == PureHemi(-3, -4)
     @test false * PureHemi(3, 4) == 0
     @test PureHemi(3, 4) * true == 3μ + 4ν
     @test @inferred((3μ + 4ν) / 2) === 1.5μ + 2ν
     @test 2 \ (3μ + 4ν) === 1.5μ + 2ν
-    @test 18 / PureHemi(3, 3) == PureHemi(-3, -3)
+    @test 18 / PureHemi(3, 3) == PureHemi(-6, -6)
     @test (18 / PureHemi(4, 2)) * PureHemi(4, 2) == 18
-    @test PureHemi(3, 3) \ 7 === PureHemi(-7 / 6, -7 / 6)
+    @test PureHemi(3, 3) \ 7 === PureHemi(-7 / 3, -7 / 3)
     @test (PureHemi(4, 2) \ 18) * PureHemi(4, 2) == 18
     @test @inferred((4μ + 2ν) / (2μ + ν)) === 2.0
     @test_throws ArgumentError (4μ + 2ν) / (2μ + 3ν)
     @test @inferred((4μ + 2ν) \ (2μ + ν)) === 0.5
-    @test PureHemi(3, 4)^2 == -24
-    @test PureHemi(3, -4)^(1 // 4) == 24^(1 // 8)
-    @test PureHemi(3, 4)^2.0 == -24.0
+    @test PureHemi(3, 4)^2 == -12
+    @test PureHemi(3, -4)^(1 // 4) == 12^(1 // 8)
+    @test PureHemi(3, 4)^2.0 == -12.0
     @test real(PureHemi(0.2, 0.3)) == 0.0
     @test real(PureHemi{Bool}) == Bool
     @test mu(PureHemi(0.2, 0.3)) == 0.2
@@ -90,112 +90,112 @@ using Test
         @test hash(PureHemi(1, 2)) != hash(PureHemi(2, 1))
     end
 
-    @test @inferred(Hemireal(1, 2, 3)) === 1 + 2μ + 3ν
-    @test @inferred(Hemireal(1.0, 2, 3)) === 1.0 + 2.0μ + 3.0ν
-    @test @inferred(Hemireal(2μ + 3ν)) === Hemireal(0, 2, 3)
-    @test @inferred(Hemireal(7.0, 2μ + 3ν)) === Hemireal(7.0, 2.0, 3.0)
-    @test @inferred(Hemireal(7)) === Hemireal(7, 0, 0)
+    @test @inferred(Hemiplex(1, 2, 3)) === 1 + 2μ + 3ν
+    @test @inferred(Hemiplex(1.0, 2, 3)) === 1.0 + 2.0μ + 3.0ν
+    @test @inferred(Hemiplex(2μ + 3ν)) === Hemiplex(0, 2, 3)
+    @test @inferred(Hemiplex(7.0, 2μ + 3ν)) === Hemiplex(7.0, 2.0, 3.0)
+    @test @inferred(Hemiplex(7)) === Hemiplex(7, 0, 0)
 
-    @test convert(Hemireal{Float64}, 1) === Hemireal(1.0, 0.0, 0.0)
-    @test convert(Hemireal{Float64}, 2μ + 3ν) === Hemireal(0.0, 2.0, 3.0)
-    @test convert(Hemireal{Float64}, Hemireal(1, 2, 3)) === Hemireal(1.0, 2.0, 3.0)
-    @test convert(Float64, Hemireal(1, 0, 0)) === 1.0
-    @test_throws DomainError convert(Float64, Hemireal(1, 2, 3))
-    @test convert(PureHemi{Float64}, Hemireal(0, 2, 3)) === PureHemi(2.0, 3.0)
-    @test_throws DomainError convert(PureHemi{Float64}, Hemireal(1, 2, 3))
+    @test convert(Hemiplex{Float64}, 1) === Hemiplex(1.0, 0.0, 0.0)
+    @test convert(Hemiplex{Float64}, 2μ + 3ν) === Hemiplex(0.0, 2.0, 3.0)
+    @test convert(Hemiplex{Float64}, Hemiplex(1, 2, 3)) === Hemiplex(1.0, 2.0, 3.0)
+    @test convert(Float64, Hemiplex(1, 0, 0)) === 1.0
+    @test_throws DomainError convert(Float64, Hemiplex(1, 2, 3))
+    @test convert(PureHemi{Float64}, Hemiplex(0, 2, 3)) === PureHemi(2.0, 3.0)
+    @test_throws DomainError convert(PureHemi{Float64}, Hemiplex(1, 2, 3))
 
-    @test @inferred(-(7 + 2μ)) === Hemireal(-7, -2, 0)
-    @test @inferred(+(7 + 2μ)) === Hemireal(7, 2, 0)
-    @test @inferred((1 + 2μ + 3ν) + (5.5 + 2.1μ + 3.2ν)) === Hemireal(6.5, 4.1, 6.2)
-    @test (1 + 2μ + 3ν) - (5.5 + 2.1μ + 3.2ν) ≈ Hemireal(-4.5, -0.1, -0.2)
-    @test (1 + 2μ + 3ν) * (5.5 + 2.1μ + 3.2ν) ≈ Hemireal(5.5 - 6.4 - 6.3, 13.1, 19.7)
+    @test @inferred(-(7 + 2μ)) === Hemiplex(-7, -2, 0)
+    @test @inferred(+(7 + 2μ)) === Hemiplex(7, 2, 0)
+    @test @inferred((1 + 2μ + 3ν) + (5.5 + 2.1μ + 3.2ν)) === Hemiplex(6.5, 4.1, 6.2)
+    @test (1 + 2μ + 3ν) - (5.5 + 2.1μ + 3.2ν) ≈ Hemiplex(-4.5, -0.1, -0.2)
+    @test (1 + 2μ + 3ν) * (5.5 + 2.1μ + 3.2ν) ≈ Hemiplex(5.5 - (6.4 + 6.3) / 2, 13.1, 19.7)
 
-    @test @inferred((1 + 2μ + 3ν) + PureHemi(2.1, 3.2)) === Hemireal(1, 4.1, 6.2)
-    @test @inferred(PureHemi(7, 9) + (2 + μ - 6ν)) === Hemireal(2, 8, 3)
-    @test (1 + 2μ + 3ν) - PureHemi(2.1, 3.2) ≈ Hemireal(1.0, -0.1, -0.2)
-    @test @inferred(PureHemi(7, 9) - (2 + μ - 6ν)) === Hemireal(-2, 6, 15)
-    @test (1 + 2μ + 3ν) * PureHemi(2.1, 3.2) ≈ Hemireal(-(6.4 + 6.3), 2.1, 3.2)
-    @test @inferred(PureHemi(7, 9) * (2 + μ - 6ν)) === Hemireal(33, 14, 18)
+    @test @inferred((1 + 2μ + 3ν) + PureHemi(2.1, 3.2)) === Hemiplex(1, 4.1, 6.2)
+    @test @inferred(PureHemi(7, 9) + (2 + μ - 6ν)) === Hemiplex(2, 8, 3)
+    @test (1 + 2μ + 3ν) - PureHemi(2.1, 3.2) ≈ Hemiplex(1.0, -0.1, -0.2)
+    @test @inferred(PureHemi(7, 9) - (2 + μ - 6ν)) === Hemiplex(-2, 6, 15)
+    @test (1 + 2μ + 3ν) * PureHemi(2.1, 3.2) ≈ Hemiplex(-(6.4 + 6.3) / 2, 2.1, 3.2)
+    @test @inferred(PureHemi(7, 9) * (2 + μ - 6ν)) === Hemiplex(16.5, 14, 18)
 
-    @test @inferred((1 + 2μ + 3ν) + 5.5) === Hemireal(6.5, 2.0, 3.0)
-    @test @inferred(3 + (2 + μ - 6ν)) === Hemireal(5, 1, -6)
-    @test @inferred((1 + 2μ + 3ν) - 5.5) === Hemireal(-4.5, 2.0, 3.0)
-    @test @inferred(3 - (2 + μ - 6ν)) === Hemireal(1, -1, 6)
-    @test @inferred(false * (2 + μ - 6ν)) === Hemireal(0, 0, 0)
-    @test @inferred((2 + μ - 6ν) * true) === Hemireal(2, 1, -6)
-    @test @inferred(1.5 * (2 + μ - 6ν)) === Hemireal(3.0, 1.5, -9.0)
-    @test @inferred((2 + μ - 6ν) * 1.5) === Hemireal(3.0, 1.5, -9.0)
-    @test @inferred((2 + μ - 6ν) / 1.5) === Hemireal(2 / 1.5, 1 / 1.5, -6 / 1.5)
-    @test @inferred(1.5 \ (2 + μ - 6ν)) === Hemireal(2 / 1.5, 1 / 1.5, -6 / 1.5)
+    @test @inferred((1 + 2μ + 3ν) + 5.5) === Hemiplex(6.5, 2.0, 3.0)
+    @test @inferred(3 + (2 + μ - 6ν)) === Hemiplex(5, 1, -6)
+    @test @inferred((1 + 2μ + 3ν) - 5.5) === Hemiplex(-4.5, 2.0, 3.0)
+    @test @inferred(3 - (2 + μ - 6ν)) === Hemiplex(1, -1, 6)
+    @test @inferred(false * (2 + μ - 6ν)) === Hemiplex(0, 0, 0)
+    @test @inferred((2 + μ - 6ν) * true) === Hemiplex(2, 1, -6)
+    @test @inferred(1.5 * (2 + μ - 6ν)) === Hemiplex(3.0, 1.5, -9.0)
+    @test @inferred((2 + μ - 6ν) * 1.5) === Hemiplex(3.0, 1.5, -9.0)
+    @test @inferred((2 + μ - 6ν) / 1.5) === Hemiplex(2 / 1.5, 1 / 1.5, -6 / 1.5)
+    @test @inferred(1.5 \ (2 + μ - 6ν)) === Hemiplex(2 / 1.5, 1 / 1.5, -6 / 1.5)
 
     x = 3.2 + μ - ν
     @test real(x) === 3.2
-    @test real(Hemireal{Float16}) == Float16
+    @test real(Hemiplex{Float16}) == Float16
     @test mu(x) == 1
     @test nu(x) == -1
     @test mu([x]) == [1]
     @test nu([x]) == [-1]
     @test conj(x) === 3.2 - μ + ν
-    @test zero(x) === Hemireal(0.0, 0.0, 0.0)
-    @test zero(Hemireal{Float16}) === Hemireal{Float16}(0, 0, 0)
+    @test zero(x) === Hemiplex(0.0, 0.0, 0.0)
+    @test zero(Hemiplex{Float16}) === Hemiplex{Float16}(0, 0, 0)
 
-    @testset "Hemireal predicates" begin
-        @test iszero(Hemireal(0, 0, 0))
-        @test !iszero(Hemireal(1, 0, 0))
-        @test !iszero(Hemireal(0, 1, 0))
-        @test isnan(Hemireal(NaN, 0.0, 0.0))
-        @test isnan(Hemireal(0.0, NaN, 0.0))
-        @test isnan(Hemireal(0.0, 0.0, NaN))
-        @test !isnan(Hemireal(1.0, 2.0, 3.0))
-        @test isinf(Hemireal(Inf, 0.0, 0.0))
-        @test isinf(Hemireal(0.0, Inf, 0.0))
-        @test isinf(Hemireal(0.0, 0.0, Inf))
-        @test !isinf(Hemireal(1.0, 2.0, 3.0))
-        @test isreal(Hemireal(1.0, 0.0, 0.0))
-        @test !isreal(Hemireal(1.0, 1.0, 0.0))
-        @test isinteger(Hemireal(2, 0, 0))
-        @test !isinteger(Hemireal(2, 1, 0))
-        @test !isinteger(Hemireal(2.5, 0, 0))
-        @test isone(Hemireal(1, 0, 0))
-        @test !isone(Hemireal(2, 0, 0))
-        @test !isone(Hemireal(1, 1, 0))
+    @testset "Hemiplex predicates" begin
+        @test iszero(Hemiplex(0, 0, 0))
+        @test !iszero(Hemiplex(1, 0, 0))
+        @test !iszero(Hemiplex(0, 1, 0))
+        @test isnan(Hemiplex(NaN, 0.0, 0.0))
+        @test isnan(Hemiplex(0.0, NaN, 0.0))
+        @test isnan(Hemiplex(0.0, 0.0, NaN))
+        @test !isnan(Hemiplex(1.0, 2.0, 3.0))
+        @test isinf(Hemiplex(Inf, 0.0, 0.0))
+        @test isinf(Hemiplex(0.0, Inf, 0.0))
+        @test isinf(Hemiplex(0.0, 0.0, Inf))
+        @test !isinf(Hemiplex(1.0, 2.0, 3.0))
+        @test isreal(Hemiplex(1.0, 0.0, 0.0))
+        @test !isreal(Hemiplex(1.0, 1.0, 0.0))
+        @test isinteger(Hemiplex(2, 0, 0))
+        @test !isinteger(Hemiplex(2, 1, 0))
+        @test !isinteger(Hemiplex(2.5, 0, 0))
+        @test isone(Hemiplex(1, 0, 0))
+        @test !isone(Hemiplex(2, 0, 0))
+        @test !isone(Hemiplex(1, 1, 0))
     end
 
-    @testset "Hemireal one" begin
-        @test one(Hemireal{Int}) === Hemireal(1, 0, 0)
-        @test one(Hemireal(3.0, 1.0, 2.0)) === Hemireal(1.0, 0.0, 0.0)
-        @test isone(one(Hemireal{Float64}))
+    @testset "Hemiplex one" begin
+        @test one(Hemiplex{Int}) === Hemiplex(1, 0, 0)
+        @test one(Hemiplex(3.0, 1.0, 2.0)) === Hemiplex(1.0, 0.0, 0.0)
+        @test isone(one(Hemiplex{Float64}))
     end
 
-    @testset "Hemireal equality" begin
-        @test Hemireal(1, 2, 3) == Hemireal(1, 2, 3)
-        @test Hemireal(1, 0, 0) == 1
-        @test 1 == Hemireal(1, 0, 0)
-        @test Hemireal(1, 1, 0) != 1
-        @test isequal(Hemireal(1, 2, 3), Hemireal(1, 2, 3))
-        @test isequal(Hemireal(NaN, 0.0, 0.0), Hemireal(NaN, 0.0, 0.0))
+    @testset "Hemiplex equality" begin
+        @test Hemiplex(1, 2, 3) == Hemiplex(1, 2, 3)
+        @test Hemiplex(1, 0, 0) == 1
+        @test 1 == Hemiplex(1, 0, 0)
+        @test Hemiplex(1, 1, 0) != 1
+        @test isequal(Hemiplex(1, 2, 3), Hemiplex(1, 2, 3))
+        @test isequal(Hemiplex(NaN, 0.0, 0.0), Hemiplex(NaN, 0.0, 0.0))
     end
 
-    @testset "Hemireal float/widen/big/bswap" begin
-        @test float(Hemireal(1, 2, 3)) === Hemireal(1.0, 2.0, 3.0)
-        @test float(Hemireal(1.0, 2.0, 3.0)) === Hemireal(1.0, 2.0, 3.0)
-        @test float(Hemireal{Int}) == Hemireal{Float64}
-        @test float(Hemireal{Float32}) == Hemireal{Float32}
-        @test widen(Hemireal{Float32}) == Hemireal{Float64}
-        @test widen(Hemireal{Int32}) == Hemireal{Int64}
-        @test big(Hemireal{Int}) == Hemireal{BigInt}
-        @test big(Hemireal(1, 2, 3)) == Hemireal(BigInt(1), BigInt(2), BigInt(3))
-        @test bswap(Hemireal(1, 2, 3)) == Hemireal(bswap(1), bswap(2), bswap(3))
+    @testset "Hemiplex float/widen/big/bswap" begin
+        @test float(Hemiplex(1, 2, 3)) === Hemiplex(1.0, 2.0, 3.0)
+        @test float(Hemiplex(1.0, 2.0, 3.0)) === Hemiplex(1.0, 2.0, 3.0)
+        @test float(Hemiplex{Int}) == Hemiplex{Float64}
+        @test float(Hemiplex{Float32}) == Hemiplex{Float32}
+        @test widen(Hemiplex{Float32}) == Hemiplex{Float64}
+        @test widen(Hemiplex{Int32}) == Hemiplex{Int64}
+        @test big(Hemiplex{Int}) == Hemiplex{BigInt}
+        @test big(Hemiplex(1, 2, 3)) == Hemiplex(BigInt(1), BigInt(2), BigInt(3))
+        @test bswap(Hemiplex(1, 2, 3)) == Hemiplex(bswap(1), bswap(2), bswap(3))
     end
 
-    @testset "Hemireal hash" begin
-        @test hash(Hemireal(0, 0, 0)) == hash(0)
-        @test hash(Hemireal(3, 0, 0)) == hash(3)
-        @test hash(Hemireal(3.0, 0.0, 0.0)) == hash(3)
-        @test hash(Hemireal(1, 2, 3)) == hash(Hemireal(1, 2, 3))
-        @test hash(Hemireal(1, 2, 3)) != hash(Hemireal(1, 3, 2))
+    @testset "Hemiplex hash" begin
+        @test hash(Hemiplex(0, 0, 0)) == hash(0)
+        @test hash(Hemiplex(3, 0, 0)) == hash(3)
+        @test hash(Hemiplex(3.0, 0.0, 0.0)) == hash(3)
+        @test hash(Hemiplex(1, 2, 3)) == hash(Hemiplex(1, 2, 3))
+        @test hash(Hemiplex(1, 2, 3)) != hash(Hemiplex(1, 3, 2))
         # Consistent with PureHemi when real part is zero
-        @test hash(Hemireal(0, 2, 3)) == hash(PureHemi(2, 3))
+        @test hash(Hemiplex(0, 2, 3)) == hash(PureHemi(2, 3))
     end
 
     @testset "binary I/O" begin
@@ -206,55 +206,55 @@ using Test
         @test read(buf, PureHemi{Float64}) === ph
 
         buf = IOBuffer()
-        hr = Hemireal(3.0, 1.5, -2.5)
+        hr = Hemiplex(3.0, 1.5, -2.5)
         write(buf, hr)
         seekstart(buf)
-        @test read(buf, Hemireal{Float64}) === hr
+        @test read(buf, Hemiplex{Float64}) === hr
     end
 
     a = [μ + 2ν, 5μ - ν]
     @test mu(a) == [1, 5]
     @test nu(a) == [2, -1]
-    @test @inferred(a * a') == [4 9; 9 -10]
-    @test isa(a * a', Matrix{Int})
-    @test @inferred(a' * a) === -6
+    @test @inferred(a * a') == [2 4.5; 4.5 -5]
+    @test isa(a * a', Matrix{Float64})
+    @test @inferred(a' * a) === -3.0
     A = [μ 0; 2μ + 3ν 5μ - 4ν]
-    @test @inferred(A * a) == [-2, 18]
-    @test isa(A * a, Vector{Hemireal{Int}})
+    @test @inferred(A * a) == [-1, 9]
+    @test isa(A * a, Vector{Hemiplex{Float64}})
     z = zero(PureHemi{Int})
     A = [μ z; 2μ + 3ν 5μ - 4ν]
-    @test @inferred(A * a) == [-2, 18]
-    @test isa(A * a, Vector{Int})
-    @test @inferred(A * A) == [0 0; -10 40]
-    @test isa(A * A, Matrix{Int})
-    @test @inferred(A * A') == [0 3; 3 -28]
-    @test isa(A * A', Matrix{Int})
-    @test @inferred(A * transpose(A)) == [0 -3; -3 28]
-    @test isa(A * transpose(A), Matrix{Int})
-    @test @inferred(A' * A) == [12 7; 7 -40]
-    @test isa(A' * A, Matrix{Int})
-    @test @inferred(transpose(A) * A) == [-12 -7; -7 40]
-    @test isa(transpose(A) * A, Matrix{Int})
-    @test @inferred(A' * A') == [0 -10; 0 40]
-    @test isa(A' * A', Matrix{Int})
-    @test @inferred(transpose(A) * transpose(A)) == [0 -10; 0 40]
-    @test isa(transpose(A) * transpose(A), Matrix{Int})
+    @test @inferred(A * a) == [-1, 9]
+    @test isa(A * a, Vector{Float64})
+    @test @inferred(A * A) == [0 0; -5 20]
+    @test isa(A * A, Matrix{Float64})
+    @test @inferred(A * A') == [0 1.5; 1.5 -14]
+    @test isa(A * A', Matrix{Float64})
+    @test @inferred(A * transpose(A)) == [0 -1.5; -1.5 14]
+    @test isa(A * transpose(A), Matrix{Float64})
+    @test @inferred(A' * A) == [6 3.5; 3.5 -20]
+    @test isa(A' * A, Matrix{Float64})
+    @test @inferred(transpose(A) * A) == [-6 -3.5; -3.5 20]
+    @test isa(transpose(A) * A, Matrix{Float64})
+    @test @inferred(A' * A') == [0 -5; 0 20]
+    @test isa(A' * A', Matrix{Float64})
+    @test @inferred(transpose(A) * transpose(A)) == [0 -5; 0 20]
+    @test isa(transpose(A) * transpose(A), Matrix{Float64})
 
     @test @inferred(A * [1, 2]) == [μ, 12μ - 5ν]
     @test isa(A * [1, 2], Vector{PureHemi{Int}})
 
-    @test μ * a == [-2, 1]
-    @test isa(μ * a, Vector{Int})
+    @test μ * a == [-1, 0.5]
+    @test isa(μ * a, Vector{Float64})
     @test 3 * a == [3μ + 6ν, 15μ - 3ν]
     @test isa(3 * a, Vector{PureHemi{Int}})
 
     # Promotion
-    @test isa([μ, false], Vector{Hemireal{Bool}})
-    @test isa([2μ, false], Vector{Hemireal{Int}})
-    @test isa([μ, π], Vector{Hemireal{Float64}})
-    @test isa([1 + μ, false], Vector{Hemireal{Int}})
-    @test isa([1 + μ, π], Vector{Hemireal{Float64}})
-    @test isa([1 + μ, 2.0 + ν], Vector{Hemireal{Float64}})
+    @test isa([μ, false], Vector{Hemiplex{Bool}})
+    @test isa([2μ, false], Vector{Hemiplex{Int}})
+    @test isa([μ, π], Vector{Hemiplex{Float64}})
+    @test isa([1 + μ, false], Vector{Hemiplex{Int}})
+    @test isa([1 + μ, π], Vector{Hemiplex{Float64}})
+    @test isa([1 + μ, 2.0 + ν], Vector{Hemiplex{Float64}})
 
     @testset "show" begin
         @test sprint(show, 1μ + 2ν) == "1μ + 2ν"
