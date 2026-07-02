@@ -1,11 +1,11 @@
-module HemirealNumbers
+module HemiplexNumbers
 
 import Base: +, -, *, /, \, ^, abs, abs2, big, bswap, conj, convert,
              float, hash, isfinite, isinteger, isnan, isinf, isone, isreal,
              iszero, one, promote_rule, read, real, show, show_unquoted,
              widen, write, zero
 
-export PureHemi, Hemireal, μ, ν, mu, nu
+export PureHemi, Hemiplex, μ, ν, mu, nu
 
 struct PureHemi{T <: Real} <: Number
     m::T
@@ -13,21 +13,21 @@ struct PureHemi{T <: Real} <: Number
 end
 PureHemi(m::Real, n::Real) = PureHemi(promote(m, n)...)
 
-struct Hemireal{T <: Real} <: Number
+struct Hemiplex{T <: Real} <: Number
     r::T
     h::PureHemi{T}
 end
 
-Hemireal{T}(r::Real, m::Real, n::Real) where {T <: Real} = Hemireal{T}(r, PureHemi{T}(m, n))
-Hemireal(r::T, m::T, n::T) where {T <: Real} = Hemireal{T}(r, PureHemi{T}(m, n))
-Hemireal(r::Real, m::Real, n::Real) = Hemireal(promote(r, m, n)...)
+Hemiplex{T}(r::Real, m::Real, n::Real) where {T <: Real} = Hemiplex{T}(r, PureHemi{T}(m, n))
+Hemiplex(r::T, m::T, n::T) where {T <: Real} = Hemiplex{T}(r, PureHemi{T}(m, n))
+Hemiplex(r::Real, m::Real, n::Real) = Hemiplex(promote(r, m, n)...)
 
-function Hemireal(r::R, h::PureHemi{H}) where {R <: Real, H <: Real}
+function Hemiplex(r::R, h::PureHemi{H}) where {R <: Real, H <: Real}
     T = promote_type(R, H)
-    return Hemireal{T}(r, PureHemi{T}(h.m, h.n))
+    return Hemiplex{T}(r, PureHemi{T}(h.m, h.n))
 end
-Hemireal(h::PureHemi{R}) where {R <: Real} = Hemireal(zero(R), h)
-Hemireal(r::R) where {R <: Real} = Hemireal(r, zero(PureHemi{R}))
+Hemiplex(h::PureHemi{R}) where {R <: Real} = Hemiplex(zero(R), h)
+Hemiplex(r::R) where {R <: Real} = Hemiplex(r, zero(PureHemi{R}))
 
 const μ = PureHemi(true, false)
 const ν = PureHemi(false, true)
@@ -37,8 +37,8 @@ convert(::Type{PureHemi{R}}, x::PureHemi) where {R} = PureHemi{R}(x.m, x.n)
 convert(::Type{PureHemi{R}}, x::Real) where {R} =
     iszero(x) ? zero(PureHemi{R}) : throw(DomainError(x, "Non-zero reals cannot be converted to pure-hemi numbers"))
 
-convert(::Type{R}, x::Hemireal) where {R <: Real} =
-    isreal(x) ? R(x.r) : throw(DomainError(x, "Hemireal numbers with non-zero hemi-part cannot be converted to real numbers"))
+convert(::Type{R}, x::Hemiplex) where {R <: Real} =
+    isreal(x) ? R(x.r) : throw(DomainError(x, "Hemiplex numbers with non-zero hemi-part cannot be converted to real numbers"))
 convert(::Type{R}, x::PureHemi) where {R <: Real} =
     iszero(x) ? zero(R) : throw(DomainError(x, "PureHemi numbers with non-zero components cannot be converted to real numbers"))
 
@@ -56,7 +56,7 @@ Base.isequal(x::PureHemi, y::PureHemi) = isequal(x.m, y.m) & isequal(x.n, y.n)
 
 (+)(x::PureHemi, y::PureHemi) = PureHemi(x.m + y.m, x.n + y.n)
 (-)(x::PureHemi, y::PureHemi) = PureHemi(x.m - y.m, x.n - y.n)
-(*)(x::PureHemi, y::PureHemi) = -(x.m * y.n + x.n * y.m)
+(*)(x::PureHemi, y::PureHemi) = -(x.m * y.n + x.n * y.m) / 2
 (*)(c::Bool, x::PureHemi) = PureHemi(c * x.m, c * x.n)
 (*)(c::Real, x::PureHemi) = PureHemi(c * x.m, c * x.n)
 (*)(x::PureHemi, c::Real) = c * x
@@ -72,7 +72,7 @@ end
 (^)(x::PureHemi, p::Real) = (x * x)^(p / 2)
 
 # Symmetric division (there are other solutions y to y*x = c)
-(/)(c::Real, x::PureHemi) = PureHemi(-c / (2 * x.n), -c / (2 * x.m))
+(/)(c::Real, x::PureHemi) = PureHemi(-c / x.n, -c / x.m)
 (\)(x::PureHemi, c::Real) = c / x
 
 real(::Type{PureHemi{R}}) where {R <: Real} = R
@@ -106,79 +106,79 @@ function hash(x::PureHemi, h::UInt)
     hash(x.m, hash(x.n, h))
 end
 
-## Hemireal implementation
-convert(::Type{Hemireal{R}}, x::Hemireal) where {R <: Real} = Hemireal{R}(x.r, x.h)
-convert(::Type{Hemireal{R}}, x::PureHemi) where {R <: Real} = Hemireal{R}(0, x)
-convert(::Type{Hemireal{R}}, x::Real) where {R <: Real} = Hemireal{R}(x, zero(PureHemi{R}))
-convert(::Type{PureHemi{R}}, x::Hemireal) where {R <: Real} =
-    iszero(x.r) ? convert(PureHemi{R}, x.h) : throw(DomainError(x, "Hemireal numbers with non-zero real part cannot be converted to pure-hemi numbers"))
+## Hemiplex implementation
+convert(::Type{Hemiplex{R}}, x::Hemiplex) where {R <: Real} = Hemiplex{R}(x.r, x.h)
+convert(::Type{Hemiplex{R}}, x::PureHemi) where {R <: Real} = Hemiplex{R}(0, x)
+convert(::Type{Hemiplex{R}}, x::Real) where {R <: Real} = Hemiplex{R}(x, zero(PureHemi{R}))
+convert(::Type{PureHemi{R}}, x::Hemiplex) where {R <: Real} =
+    iszero(x.r) ? convert(PureHemi{R}, x.h) : throw(DomainError(x, "Hemiplex numbers with non-zero real part cannot be converted to pure-hemi numbers"))
 
-iszero(x::Hemireal) = iszero(x.r) & iszero(x.h)
-isnan(x::Hemireal) = isnan(x.r) | isnan(x.h)
-isinf(x::Hemireal) = isinf(x.r) | isinf(x.h)
-isfinite(x::Hemireal) = isfinite(x.r) & isfinite(x.h)
-isreal(x::Hemireal) = iszero(x.h)
-isinteger(x::Hemireal) = isreal(x) & isinteger(x.r)
-isone(x::Hemireal) = isone(x.r) & iszero(x.h)
+iszero(x::Hemiplex) = iszero(x.r) & iszero(x.h)
+isnan(x::Hemiplex) = isnan(x.r) | isnan(x.h)
+isinf(x::Hemiplex) = isinf(x.r) | isinf(x.h)
+isfinite(x::Hemiplex) = isfinite(x.r) & isfinite(x.h)
+isreal(x::Hemiplex) = iszero(x.h)
+isinteger(x::Hemiplex) = isreal(x) & isinteger(x.r)
+isone(x::Hemiplex) = isone(x.r) & iszero(x.h)
 
-Base.:(==)(x::Hemireal, y::Hemireal) = (x.r == y.r) & (x.h == y.h)
-Base.isequal(x::Hemireal, y::Hemireal) = isequal(x.r, y.r) & isequal(x.h, y.h)
+Base.:(==)(x::Hemiplex, y::Hemiplex) = (x.r == y.r) & (x.h == y.h)
+Base.isequal(x::Hemiplex, y::Hemiplex) = isequal(x.r, y.r) & isequal(x.h, y.h)
 
-(+)(x::Hemireal) = Hemireal(+x.r, +x.h)
-(-)(x::Hemireal) = Hemireal(-x.r, -x.h)
+(+)(x::Hemiplex) = Hemiplex(+x.r, +x.h)
+(-)(x::Hemiplex) = Hemiplex(-x.r, -x.h)
 
-(+)(x::Hemireal, y::Hemireal) = Hemireal(x.r + y.r, x.h + y.h)
-(-)(x::Hemireal, y::Hemireal) = Hemireal(x.r - y.r, x.h - y.h)
-(*)(x::Hemireal, y::Hemireal) = Hemireal(x.r * y.r + x.h * y.h, x.r * y.h + x.h * y.r)
+(+)(x::Hemiplex, y::Hemiplex) = Hemiplex(x.r + y.r, x.h + y.h)
+(-)(x::Hemiplex, y::Hemiplex) = Hemiplex(x.r - y.r, x.h - y.h)
+(*)(x::Hemiplex, y::Hemiplex) = Hemiplex(x.r * y.r + x.h * y.h, x.r * y.h + x.h * y.r)
 
-(+)(x::Hemireal, y::PureHemi) = x + Hemireal(y)
-(+)(x::PureHemi, y::Hemireal) = y + x
-(-)(x::Hemireal, y::PureHemi) = x - Hemireal(y)
-(-)(x::PureHemi, y::Hemireal) = Hemireal(x) - y
-(*)(x::Hemireal, y::PureHemi) = x * Hemireal(y)
-(*)(x::PureHemi, y::Hemireal) = y * x
+(+)(x::Hemiplex, y::PureHemi) = x + Hemiplex(y)
+(+)(x::PureHemi, y::Hemiplex) = y + x
+(-)(x::Hemiplex, y::PureHemi) = x - Hemiplex(y)
+(-)(x::PureHemi, y::Hemiplex) = Hemiplex(x) - y
+(*)(x::Hemiplex, y::PureHemi) = x * Hemiplex(y)
+(*)(x::PureHemi, y::Hemiplex) = y * x
 
-(+)(x::Hemireal, y::Real) = x + Hemireal(y)
-(+)(x::Real, y::Hemireal) = y + x
-(-)(x::Hemireal, y::Real) = x - Hemireal(y)
-(-)(x::Real, y::Hemireal) = Hemireal(x) - y
-(*)(c::Bool, x::Hemireal) = Hemireal(c * x.r, c * x.h)
-(*)(c::Real, x::Hemireal) = Hemireal(c * x.r, c * x.h)
-(*)(x::Hemireal, c::Real) = c * x
-(/)(x::Hemireal, c::Real) = Hemireal(x.r / c, x.h / c)
-(\)(c::Real, x::Hemireal) = x / c
+(+)(x::Hemiplex, y::Real) = x + Hemiplex(y)
+(+)(x::Real, y::Hemiplex) = y + x
+(-)(x::Hemiplex, y::Real) = x - Hemiplex(y)
+(-)(x::Real, y::Hemiplex) = Hemiplex(x) - y
+(*)(c::Bool, x::Hemiplex) = Hemiplex(c * x.r, c * x.h)
+(*)(c::Real, x::Hemiplex) = Hemiplex(c * x.r, c * x.h)
+(*)(x::Hemiplex, c::Real) = c * x
+(/)(x::Hemiplex, c::Real) = Hemiplex(x.r / c, x.h / c)
+(\)(c::Real, x::Hemiplex) = x / c
 
-real(::Type{Hemireal{R}}) where {R <: Real} = R
-real(x::Hemireal{R}) where {R <: Real} = x.r
-conj(x::Hemireal) = Hemireal(x.r, -x.h)
-mu(x::Hemireal) = mu(x.h)
-nu(x::Hemireal) = nu(x.h)
+real(::Type{Hemiplex{R}}) where {R <: Real} = R
+real(x::Hemiplex{R}) where {R <: Real} = x.r
+conj(x::Hemiplex) = Hemiplex(x.r, -x.h)
+mu(x::Hemiplex) = mu(x.h)
+nu(x::Hemiplex) = nu(x.h)
 
-zero(::Type{Hemireal{R}}) where {R <: Real} = Hemireal{R}(0, PureHemi{R}(0, 0))
-zero(::Hemireal{R}) where {R <: Real} = zero(Hemireal{R})
-one(::Type{Hemireal{R}}) where {R <: Real} = Hemireal{R}(1, PureHemi{R}(0, 0))
-one(::Hemireal{R}) where {R <: Real} = one(Hemireal{R})
+zero(::Type{Hemiplex{R}}) where {R <: Real} = Hemiplex{R}(0, PureHemi{R}(0, 0))
+zero(::Hemiplex{R}) where {R <: Real} = zero(Hemiplex{R})
+one(::Type{Hemiplex{R}}) where {R <: Real} = Hemiplex{R}(1, PureHemi{R}(0, 0))
+one(::Hemiplex{R}) where {R <: Real} = one(Hemiplex{R})
 
 # (note that abs2(x) != x*x for the hemi part)
-abs2(x::Hemireal) = x.r * x.r + abs2(x.h)
-abs(x::Hemireal) = sqrt(abs2(x))
+abs2(x::Hemiplex) = x.r * x.r + abs2(x.h)
+abs(x::Hemiplex) = sqrt(abs2(x))
 
-float(::Type{Hemireal{T}}) where {T <: AbstractFloat} = Hemireal{T}
-float(::Type{Hemireal{T}}) where {T} = Hemireal{float(T)}
-float(x::Hemireal{<:AbstractFloat}) = x
-float(x::Hemireal) = Hemireal(float(x.r), float(x.h))
+float(::Type{Hemiplex{T}}) where {T <: AbstractFloat} = Hemiplex{T}
+float(::Type{Hemiplex{T}}) where {T} = Hemiplex{float(T)}
+float(x::Hemiplex{<:AbstractFloat}) = x
+float(x::Hemiplex) = Hemiplex(float(x.r), float(x.h))
 
-widen(::Type{Hemireal{T}}) where {T} = Hemireal{widen(T)}
+widen(::Type{Hemiplex{T}}) where {T} = Hemiplex{widen(T)}
 
-big(::Type{Hemireal{T}}) where {T <: Real} = Hemireal{big(T)}
-big(x::Hemireal{T}) where {T <: Real} = Hemireal{big(T)}(x.r, x.h)
+big(::Type{Hemiplex{T}}) where {T <: Real} = Hemiplex{big(T)}
+big(x::Hemiplex{T}) where {T <: Real} = Hemiplex{big(T)}(x.r, x.h)
 
-bswap(x::Hemireal) = Hemireal(bswap(x.r), bswap(x.h))
+bswap(x::Hemiplex) = Hemiplex(bswap(x.r), bswap(x.h))
 
-function hash(x::Hemireal, h::UInt)
-    # A real-valued Hemireal hashes like its real part
+function hash(x::Hemiplex, h::UInt)
+    # A real-valued Hemiplex hashes like its real part
     iszero(x.h) && return hash(x.r, h)
-    # A pure-hemi Hemireal hashes like its PureHemi
+    # A pure-hemi Hemiplex hashes like its PureHemi
     iszero(x.r) && return hash(x.h, h)
     hash(x.r, hash(x.h, h))
 end
@@ -195,15 +195,15 @@ for f in (:mu, :nu)
     end
 end
 
-promote_rule(::Type{Bool}, ::Type{PureHemi{H}}) where {H <: Real} = Hemireal{promote_type(Bool, H)}
-promote_rule(::Type{R}, ::Type{PureHemi{H}}) where {R <: AbstractIrrational, H <: Real} = Hemireal{promote_type(R, H)}
-promote_rule(::Type{R}, ::Type{PureHemi{H}}) where {R <: Real, H <: Real} = Hemireal{promote_type(R, H)}
+promote_rule(::Type{Bool}, ::Type{PureHemi{H}}) where {H <: Real} = Hemiplex{promote_type(Bool, H)}
+promote_rule(::Type{R}, ::Type{PureHemi{H}}) where {R <: AbstractIrrational, H <: Real} = Hemiplex{promote_type(R, H)}
+promote_rule(::Type{R}, ::Type{PureHemi{H}}) where {R <: Real, H <: Real} = Hemiplex{promote_type(R, H)}
 promote_rule(::Type{PureHemi{H1}}, ::Type{PureHemi{H2}}) where {H1 <: Real, H2 <: Real} = PureHemi{promote_type(H1, H2)}
-promote_rule(::Type{Bool}, ::Type{Hemireal{H}}) where {H <: Real} = Hemireal{promote_type(Bool, H)}
-promote_rule(::Type{R}, ::Type{Hemireal{H}}) where {R <: AbstractIrrational, H <: Real} = Hemireal{promote_type(R, H)}
-promote_rule(::Type{R}, ::Type{Hemireal{H}}) where {R <: Real, H <: Real} = Hemireal{promote_type(R, H)}
-promote_rule(::Type{PureHemi{H1}}, ::Type{Hemireal{H2}}) where {H1 <: Real, H2 <: Real} = Hemireal{promote_type(H1, H2)}
-promote_rule(::Type{Hemireal{H1}}, ::Type{Hemireal{H2}}) where {H1 <: Real, H2 <: Real} = Hemireal{promote_type(H1, H2)}
+promote_rule(::Type{Bool}, ::Type{Hemiplex{H}}) where {H <: Real} = Hemiplex{promote_type(Bool, H)}
+promote_rule(::Type{R}, ::Type{Hemiplex{H}}) where {R <: AbstractIrrational, H <: Real} = Hemiplex{promote_type(R, H)}
+promote_rule(::Type{R}, ::Type{Hemiplex{H}}) where {R <: Real, H <: Real} = Hemiplex{promote_type(R, H)}
+promote_rule(::Type{PureHemi{H1}}, ::Type{Hemiplex{H2}}) where {H1 <: Real, H2 <: Real} = Hemiplex{promote_type(H1, H2)}
+promote_rule(::Type{Hemiplex{H1}}, ::Type{Hemiplex{H2}}) where {H1 <: Real, H2 <: Real} = Hemiplex{promote_type(H1, H2)}
 
 ## Show
 
@@ -227,7 +227,7 @@ function show(io::IO, x::PureHemi)
     print(io, "ν")
 end
 
-function show(io::IO, x::Hemireal)
+function show(io::IO, x::Hemiplex)
     compact = get(io, :compact, false)::Bool
     show(io, x.r)
     bufio = IOBuffer()
@@ -254,7 +254,7 @@ function show(io::IO, x::Hemireal)
     print(io, "ν")
 end
 
-function show_unquoted(io::IO, x::Union{PureHemi, Hemireal}, ::Int, prec::Int)
+function show_unquoted(io::IO, x::Union{PureHemi, Hemiplex}, ::Int, prec::Int)
     if Base.operator_precedence(:+) <= prec
         print(io, "(")
         show(io, x)
@@ -275,12 +275,12 @@ function write(s::IO, x::PureHemi)
     write(s, x.m, x.n)
 end
 
-function read(s::IO, ::Type{Hemireal{T}}) where {T <: Real}
+function read(s::IO, ::Type{Hemiplex{T}}) where {T <: Real}
     r = read(s, T)
     h = read(s, PureHemi{T})
-    Hemireal{T}(r, h)
+    Hemiplex{T}(r, h)
 end
-function write(s::IO, x::Hemireal)
+function write(s::IO, x::Hemiplex)
     write(s, x.r, x.h)
 end
 
