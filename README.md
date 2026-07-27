@@ -18,4 +18,30 @@ associative.  Hemiplex numbers with `ν=0` are the same as dual numbers.
 
 The motivation for inventing/rediscovering the hemiplex numbers was to
 solve, using finite numbers, what would otherwise be singular
-equations.
+equations.  They are described in [Edelman & Holy,
+arXiv:2607.21383](https://arxiv.org/abs/2607.21383);
+[HemiplexFactorizations.jl](https://github.com/timholy/HemiplexFactorizations.jl)
+applies them to the Cholesky decomposition of arbitrary symmetric
+matrices.
+
+## Citation
+
+If you use this package in published work, please cite:
+
+> A. Edelman and T. E. Holy, "Jordan algebras, hemiplex numbers, and the
+> Cholesky decomposition of arbitrary symmetric matrices," arXiv:2607.21383
+> (2026). https://doi.org/10.48550/arXiv.2607.21383
+
+```bibtex
+@article{EdelmanHoly2026,
+  author  = {Edelman, Alan and Holy, Timothy E.},
+  title   = {Jordan algebras, hemiplex numbers, and the {Cholesky}
+             decomposition of arbitrary symmetric matrices},
+  journal = {arXiv},
+  year    = {2026},
+  doi     = {10.48550/arXiv.2607.21383},
+  url     = {https://arxiv.org/abs/2607.21383},
+}
+```
+
+Machine-readable metadata is in [`CITATION.cff`](CITATION.cff).
