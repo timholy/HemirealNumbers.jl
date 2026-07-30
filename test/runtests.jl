@@ -256,6 +256,97 @@ using Test
     @test isa([1 + μ, π], Vector{Hemiplex{Float64}})
     @test isa([1 + μ, 2.0 + ν], Vector{Hemiplex{Float64}})
 
+    @testset "complex coefficients" begin
+        z = @inferred(PureHemi(1.0 + 2.0im, 3.0 - 1.0im))
+        @test z isa PureHemi{ComplexF64}
+        @test @inferred(PureHemi(1.0 + 0.0im, 2)) === PureHemi(1.0 + 0.0im, 2.0 + 0.0im)
+        @test PureHemi{ComplexF32}(1, 0) === PureHemi(1.0f0 + 0.0f0im, 0.0f0 + 0.0f0im)
+        @test convert(PureHemi{ComplexF64}, PureHemi(1, 2)) === PureHemi(1.0 + 0.0im, 2.0 + 0.0im)
+        @test @inferred(2 * z) === PureHemi(2.0 + 4.0im, 6.0 - 2.0im)
+        @test @inferred((1 + 1im) * z) === PureHemi(-1.0 + 3.0im, 4.0 + 2.0im)
+        @test @inferred(z + PureHemi(1, 1)) === PureHemi(2.0 + 2.0im, 4.0 - 1.0im)
+
+        @test coefftype(z) === ComplexF64
+        @test coefftype(PureHemi{ComplexF32}) === ComplexF32
+        @test coefftype(Hemiplex{ComplexF64}) === ComplexF64
+        @test coefftype(Hemiplex(1.0, 2.0, 3.0)) === Float64
+        @test real(PureHemi{ComplexF64}) === Float64
+        @test real(Hemiplex{ComplexF32}) === Float32
+        @test real(z) === 0.0
+        @test real(Hemiplex(1.0 + 2.0im, z)) === 1.0
+
+        # Promotion with complex scalars
+        @test promote_type(ComplexF64, PureHemi{Float64}) === Hemiplex{ComplexF64}
+        @test isa([PureHemi(1.0, 2.0), 1.0 + 0im], Vector{Hemiplex{ComplexF64}})
+        @test @inferred(z + (1 + 1im)) === Hemiplex(1.0 + 1.0im, 1.0 + 2.0im, 3.0 - 1.0im)
+        @test convert(Hemiplex{ComplexF64}, 1 + 1im) === Hemiplex(1.0 + 1.0im, 0.0im, 0.0im)
+
+        # Conjugation
+        @test conj(z) === PureHemi(-1.0 + 2.0im, -3.0 - 1.0im)
+        @test conj(conj(z)) === z
+        w = PureHemi(0.5, 1.0 - 1.0im)
+        @test (z * w)' == z' * w'
+        @test conj(Hemiplex(1.0 + 2.0im, z)) === Hemiplex(1.0 - 2.0im, conj(z))
+        L = [PureHemi(1.0 + 1.0im, 2.0 - 1.0im) PureHemi(0.5 + 0.0im, 0.0 + 1.0im);
+             PureHemi(2.0 + 0.0im, 3.0 + 1.0im) PureHemi(0.0 + 1.0im, 1.0 + 0.0im)]
+        Ladj = L'
+        for i in axes(Ladj, 1), j in axes(Ladj, 2)
+            @test Ladj[i, j] == conj(L[j, i])
+        end
+
+        # abs2 is a real quadratic form
+        @test abs2(z) isa Float64
+        @test abs2(z) == real(z.m * conj(z.n))
+        @test z * conj(z) ≈ abs2(z)
+        @test abs2(PureHemi(3, 4)) == 12
+
+        # Symmetric division
+        for c in (2.0 - 3.0im, 3.0)
+            @test z * (c / z) ≈ c
+            @test z * (z \ c) ≈ c
+        end
+
+        hc = Hemiplex(1.0 + 1.0im, 2.0 + 0.0im, 3.0 + 0.0im)
+        @test_throws "not scalar-valued" abs2(hc)
+        @test_throws "not scalar-valued" abs(hc)
+        # inv uses the coefficient-linear hemi-conjugate
+        @test hc * inv(hc) ≈ 1
+        @test inv(inv(hc)) ≈ hc
+        let zc = Hemiplex(0.0im, 2.0 + 1.0im, 1.0 - 3.0im)
+            @test zc * inv(zc) ≈ 1
+        end
+        let zd = Hemiplex(1.0 + 0.0im, 1.0im, 1.0im)  # r² + mn = 0
+            @test !isfinite(inv(zd))
+        end
+        @test inv(Hemiplex(1.0, 2.0, 3.0)) === Hemiplex(1.0, -2.0, -3.0) / 7.0
+
+        # isapprox uses the coefficient sup-norm, so it works even where abs does not
+        @test Hemiplex(0.0, 1.0, -1.0) ≈ Hemiplex(0.0, 1.0, -1.0)      # abs2 < 0
+        @test PureHemi(1.0 + 1.0im, 2.0) ≈ PureHemi(1.0 + 1.0im, 2.0 + 1e-13)
+        @test !(Hemiplex(1.0, 0.0, 0.0) ≈ Hemiplex(1.0, 0.1, 0.0))
+        @test Hemiplex(1.0 + 0.0im, 0.0im, 0.0im) ≈ 1.0
+
+        @test !isreal(Hemiplex(1.0 + 2.0im, 0.0im, 0.0im))
+        @test isreal(Hemiplex(1.0 + 0.0im, 0.0im, 0.0im))
+        @test convert(ComplexF64, Hemiplex(1.0 + 2.0im, 0.0im, 0.0im)) === 1.0 + 2.0im
+        @test_throws InexactError convert(Float64, Hemiplex(1.0 + 2.0im, 0.0im, 0.0im))
+        @test_throws DomainError convert(ComplexF64, Hemiplex(1.0 + 2.0im, 1.0im, 0.0im))
+
+        # symmetric division by a real pure-hemi must not round-trip through abs2
+        @test 2.0 / PureHemi(1e300, 1e300) === PureHemi(-2.0e-300, -2.0e-300)
+        @test (3.0 + 1.0im) / PureHemi(1e300, 1e300) === PureHemi(-((3.0 + 1.0im) / 1e300), -((3.0 + 1.0im) / 1e300))
+
+        @test mu([z]) == [1.0 + 2.0im]
+        @test nu([z]) == [3.0 - 1.0im]
+        @test sprint(show, z) == "(1.0 + 2.0im)μ + (3.0 - 1.0im)ν"
+        @test sprint(show, Hemiplex(1.0 + 0.0im, z)) == "(1.0 + 0.0im) + (1.0 + 2.0im)μ + (3.0 - 1.0im)ν"
+
+        buf = IOBuffer()
+        write(buf, z)
+        seekstart(buf)
+        @test read(buf, PureHemi{ComplexF64}) === z
+    end
+
     @testset "show" begin
         @test sprint(show, 1μ + 2ν) == "1μ + 2ν"
         @test sprint(show, 1μ - 2ν) == "1μ - 2ν"
