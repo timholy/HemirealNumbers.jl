@@ -7,14 +7,22 @@ A hemiplex number `z` can be written
 ```jl
 z = r + mμ + nν
 ```
-where `r`, `m`, and `n` are real, and the special numbers `μ`, `ν` satisfy
+where `r`, `m`, and `n` are real or complex and the special numbers `μ`, `ν` satisfy
 ```jl
 μ*μ = ν*ν = 0, μ*ν = ν*μ = -1/2.
 ```
-Addition, subtraction, and any operation involving real numbers are
-defined "the obvious way," and the conjugate of `z = r + mμ + nν` is `r - mμ - nν`.
-Multiplication of general hemiplex numbers is commutative but not
-associative.  Hemiplex numbers with `ν=0` are the same as dual numbers.
+Addition, subtraction, and scalar multiplication act coefficientwise.
+Multiplication is commutative but, in general, not associative.  Hemiplex
+numbers with `ν=0` are dual numbers.
+
+Conjugation combines hemi-conjugation with conjugation of the coefficients:
+`conj(z) = conj(r) - conj(m)μ - conj(n)ν`.  The function `coefftype(z)`
+returns the coefficient type, while `real(typeof(z))` returns its underlying
+real type.  For complex-coefficient `Hemiplex` numbers, `z*conj(z)` generally
+retains a hemi-part, so `abs2` and `abs` are supported only for real
+coefficients.  (`abs2` of a `PureHemi` is real-valued with either coefficient
+type.)  Inversion works with both: `inv` uses the coefficient-linear
+hemi-conjugate `r - mμ - nν`, whose product with `z` is the scalar `r² + mn`.
 
 The motivation for inventing/rediscovering the hemiplex numbers was to
 solve, using finite numbers, what would otherwise be singular
